@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organizador de Linhas</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color:#1f2937;background:#f3f6fb}
+*{box-sizing:border-box}body{margin:0;padding:24px}
+main{max-width:1400px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;box-shadow:0 8px 30px #0f172a0c}
+h1{margin:0 0 8px;font-size:25px}.sub{color:#64748b;margin:0 0 22px;line-height:1.5}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+button,.file-label{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:14px}
+.primary{background:#1769e0;color:white}.secondary,.file-label{background:#eaf1fb;color:#194b88}.danger{background:#fee2e2;color:#991b1b}.move{padding:6px 9px;background:#eef2f7;color:#334155;margin:0 2px}
+input[type=file]{display:none}
+.info{font-size:13px;color:#64748b;margin:10px 0 16px}
+.table-wrap{overflow:auto;border:1px solid #e2e8f0;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1350px;table-layout:auto}th,td{white-space:nowrap}th.description-col,td.description-col{min-width:320px;width:30%;white-space:normal}td.description-col textarea{display:block;width:100%;min-width:300px;min-height:56px;resize:vertical;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.4;background:#ffffffcc;border:1px solid #cbd5e1;border-radius:6px;padding:8px;font:inherit;box-sizing:border-box}td.description-col textarea:focus{outline:2px solid #93c5fd}
+th{background:#173f73;color:#fff;text-align:left;padding:12px;font-size:13px}
+td{border-bottom:1px solid #e8edf4;padding:8px;vertical-align:middle}
+tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#f8fafc}
+td input{width:100%;border:1px solid transparent;background:transparent;border-radius:5px;padding:8px;font:inherit;min-width:90px}
+td input:focus{outline:2px solid #93c5fd;border-color:#60a5fa;background:white}
+td.num{width:60px;text-align:center;color:#64748b}
+td.actions{white-space:nowrap;min-width:245px}.timer-controls{display:flex;gap:5px;align-items:center;margin-bottom:6px}.clock{font-variant-numeric:tabular-nums;font-weight:bold;color:#173f73;min-width:75px}.timer-btn{padding:6px 9px;background:#dbeafe;color:#1e40af}
+td select{min-width:155px;padding:8px;border:1px solid #cbd5e1;border-radius:7px;background:white}
+.color-picker{width:37px;height:32px;padding:2px;cursor:pointer;border:1px solid #cbd5e1;border-radius:6px}
+.config{border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:16px}
+.config summary{font-weight:700;cursor:pointer}
+.config-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.config-item{display:flex;gap:6px;align-items:center;padding:6px;border:1px solid #e2e8f0;border-radius:8px}
+.config-item input[type=text]{padding:8px;max-width:160px;border:1px solid #cbd5e1;border-radius:6px}
+.time-editor{min-width:190px;width:190px;border:1px solid #cbd5e1;border-radius:6px;padding:7px;background:#fff;font:inherit}
+.tabbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px;border-bottom:2px solid #dce5f1;padding-bottom:8px}
+.tab{background:#eaf1fb;color:#173f73;border-radius:8px 8px 0 0}
+.tab.active{background:#173f73;color:#fff}
+.status{min-height:20px;margin-top:12px;color:#166534;font-size:13px}
+footer{margin-top:18px;color:#64748b;font-size:12px;line-height:1.5}
+@media(max-width:600px){body{padding:10px}main{padding:15px}h1{font-size:21px}}
+/* Layout modernizado */
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1b2b42;background:#eef3f9}
+body{padding:24px}
+main{max-width:1600px;border:1px solid #dce5f1;border-radius:22px;padding:30px;box-shadow:0 18px 55px #15305212}
+.app-header{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:8px 0 25px;border-bottom:1px solid #e5ebf3;margin-bottom:24px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;color:#2563eb;margin-bottom:9px}
+h1{font-size:clamp(24px,3vw,34px);letter-spacing:-1px;margin-bottom:8px}
+.sub{margin-bottom:0;font-size:14px}
+.save-panel{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.save-button{font-size:15px;padding:14px 21px;box-shadow:0 5px 13px #2563eb33}
+.save-hint{font-size:12px;color:#64748b}
+.control-section{background:#f9fbff;border:1px solid #e5edf7;border-radius:15px;padding:16px 18px;margin-bottom:14px}
+.section-heading{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.section-heading span{background:#e4edff;color:#2454a2;padding:6px 8px;border-radius:8px;font-size:11px;font-weight:800}
+.section-heading strong{font-size:15px}.section-heading small{color:#718096;font-size:12px}
+.toolbar{gap:8px;margin-bottom:0}
+button,.file-label{border-radius:9px;padding:10px 13px;transition:filter .15s,transform .15s,box-shadow .15s}
+button:hover:not(:disabled),.file-label:hover{filter:brightness(.96);box-shadow:0 3px 9px #142b4218}
+button:active:not(:disabled){transform:translateY(1px)}
+button:focus-visible,.file-label:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.primary{background:#2563eb;color:white}
+.secondary,.file-label{background:#eaf0fb;color:#234875}
+.danger{background:#fff0f0;color:#ad3232;border:1px solid #ffd6d6}
+.tabbar{border-bottom:1px solid #d8e3f2;margin:0 0 13px;padding:0 0 8px}
+.tab{border-radius:9px;background:#e9eff9}.tab.active{background:#2455a3;color:white;box-shadow:0 3px 10px #244e9630}
+.config{margin-top:17px;border-radius:12px;background:#fff}
+.table-wrap{border-radius:12px;box-shadow:0 2px 8px #173f730b}
+th{background:#1b3e6a;position:sticky;top:0;z-index:1}
+.status{background:#f0fdf4;border:1px solid #d8f2df;border-radius:8px;padding:10px 12px;margin-top:15px}
+@media(max-width:720px){body{padding:8px}main{padding:14px;border-radius:12px}.app-header{align-items:stretch;flex-direction:column}.save-panel{align-items:stretch}.section-heading{flex-wrap:wrap}.control-section{padding:12px}.toolbar button,.toolbar .file-label{flex:1 1 auto;text-align:center}}
+/* Painéis recolhíveis e controles próximos da tabela */
+.compact-section{padding-bottom:12px}
+.collapsible-section>summary,.collapsible-actions>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;font-size:14px;color:#24466f;font-weight:650}
+.collapsible-section>summary::-webkit-details-marker,.collapsible-actions>summary::-webkit-details-marker{display:none}
+.collapsible-section>summary::before,.collapsible-actions>summary::before{content:"▸";font-size:15px;color:#2563eb;transition:transform .15s}
+.collapsible-section[open]>summary::before,.collapsible-actions[open]>summary::before{transform:rotate(90deg)}
+.summary-note{font-size:12px;color:#718096;font-weight:400}
+.collapsible-section>.toolbar,.collapsible-actions>.toolbar{margin-top:14px}
+.collapsible-actions{padding-top:8px}
+.activity-section{margin-top:12px;margin-bottom:6px;padding-bottom:12px}
+.activity-section .section-heading{margin-bottom:10px}
+.activity-section+.info{margin:5px 0 8px;padding:8px 12px;font-size:12px}
+@media(max-width:720px){.summary-note{display:none}}
+
+/* Correcoes para uso em celular */
+button,.file-label,.tab,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,.file-label{min-height:44px}
+@media(max-width:720px){
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:1180px}
+  .toolbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .toolbar button,.toolbar .file-label{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center}
+  .tabbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px}
+  .tab{flex:0 0 auto;min-height:44px}
+  td.actions{position:sticky;right:0;background:#fff;z-index:2;min-width:220px}
+  tbody tr:nth-child(even) td.actions{background:#f8fafc}
+  .timer-controls{flex-wrap:wrap}
+  .timer-btn,.move{min-height:40px;min-width:40px}
+  input,select,textarea{font-size:16px!important}
+}
+
+</style>
+</head>
+<body>
+<main>
+  <div class="app-header">
+    <div>
+      <div class="eyebrow">CONTROLE DE PROCESSOS · SMED</div>
+      <h1>Painel de atividades</h1>
+      <p class="sub">Gerencie coletas, acompanhe tempos e exporte seus resultados.</p>
+    </div>
+    <div class="save-panel">
+      <button class="primary save-button" id="manualSaveBtn" type="button">💾 Salvar alterações</button>
+      <span class="save-hint" id="saveHint">Salvamento automático ativo</span>
+    </div>
+  </div>
+  <section class="control-section compact-section">
+    <div class="section-heading"><span>01</span><strong>Coletas</strong><small>Selecione a coleta ativa</small></div>
+    <div class="tabbar" id="tabbar" role="tablist"></div>
+    <details class="collapsible-actions">
+      <summary>Gerenciar coletas <span class="summary-note">Nova coleta, renomear ou excluir</span></summary>
+      <div class="toolbar">
+        <button class="secondary" id="newCollection" type="button">＋ Nova coleta</button>
+        <button class="secondary" id="renameCollection" type="button">✎ Renomear</button>
+        <button class="danger" id="removeCollection" type="button">Excluir coleta</button>
+      </div>
+    </details>
+  </section>
+  <details class="control-section collapsible-section">
+    <summary><strong>02 · Arquivos e exportação</strong><span class="summary-note">Importar Excel/CSV ou exportar relatórios</span></summary>
+    <div class="toolbar">
+      <label class="file-label" for="fileInput">↑ Importar Excel / CSV</label>
+      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
+      <button class="primary" id="exportBtn" type="button">↓ Exportar Excel</button>
+      <button class="secondary" id="csvBtn" type="button">Exportar CSV</button>
+    </div>
+  </details>
+  <details class="config">
+    <summary>Configurar opções da lista suspensa e cores</summary>
+    <div class="config-grid" id="configGrid"></div>
+    <button class="secondary" id="addOption" style="margin-top:10px">+ Nova opção</button>
+  </details>
+
+  <section class="control-section activity-section">
+    <div class="section-heading"><span>03</span><strong>Atividades e grupos</strong><small>Organize a sequência de execução</small></div>
+    <div class="toolbar">
+      <button class="primary" id="addBtn" type="button">＋ Adicionar atividade</button>
+      <button class="secondary" id="groupBtn" type="button">Agrupar selecionadas</button>
+      <button class="secondary" id="ungroupBtn" type="button">Desagrupar</button>
+      <button class="danger" id="resetSmedBtn" type="button">↻ Resetar SMED</button>
+    </div>
+  </section>
+  <div class="info">Marque atividades para agrupá-las. Use ↑ ↓ para mover uma atividade individualmente ou ⇧ ⇩ para mover o grupo inteiro. A coluna Descrição tem quebra automática de texto e altura ajustável. Cada linha tem seu próprio cronômetro com Play, Pausar e Zerar. Clique no texto para editar. A ordem exibida e os tempos registrados serão exportados.</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="headerRow"></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="status" id="status" role="status"></div>
+  <footer>Os dados são salvos automaticamente neste navegador. Para uma cópia de segurança, exporte o Excel. Ao importar uma planilha, os cronômetros são reiniciados. Exporte seu arquivo para guardar as alterações. A importação e exportação de Excel usam a biblioteca SheetJS; na primeira utilização, é necessária conexão com a internet para carregá-la.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+
+window.addEventListener('error',function(e){
+  var el=document.getElementById('status');
+  if(el) el.textContent='Erro no navegador: '+(e.message||'erro desconhecido');
+});
+
+const defaultHeaders = ["ID", "Descrição", "Responsável", "Observações"];
+let headers = [...defaultHeaders];
+let rows = [];
+let options = [];
+let selections=rows.map(()=>((options[0]&&options[0].label)||""));
+let groups=rows.map(()=>null);
+let checked=new Set();
+let groupSequence=0;
+function groupName(id){
+  if(id===null||id===undefined)return "—";
+  // Numeração visual baseada na ordem atual dos grupos na tabela.
+  const ordered=[...new Set(groups.filter(g=>g!==null&&g!==undefined))];
+  const number=ordered.indexOf(id)+1;
+  return number>0?`Grupo ${number}`:"—";
+}
+function groupBounds(i){
+  const id=groups[i];if(id===null)return [i,i];
+  let a=i,b=i;
+  while(a>0&&groups[a-1]===id)a--;
+  while(b<groups.length-1&&groups[b+1]===id)b++;
+  return [a,b];
+}
+function reorderBlock(i,delta){
+  const [a,b]=groupBounds(i);
+  const target=delta<0?a-1:b+1;
+  if(target<0||target>=rows.length)return;
+  const [neighborStart,neighborEnd]=groupBounds(target);
+  const keys=[rows,ids,selections,customColors,groups];
+  for(const arr of keys){
+    const block=arr.splice(a,b-a+1);
+    const dest=delta<0?neighborStart:neighborEnd-(b-a);
+    arr.splice(dest,0,...block);
+  }
+  render();status("Atividade ou grupo movimentado.");
+}
+function groupSelected(){
+  const indexes=ids.map((id,i)=>checked.has(id)?i:-1).filter(i=>i>=0);
+  if(indexes.length<2){status("Selecione pelo menos duas atividades.");return}
+  const members=new Set(indexes);
+  // Existing group members move together, preserving group integrity.
+  indexes.forEach(i=>{const g=groups[i];if(g!==null)groups.forEach((v,j)=>{if(v===g)members.add(j)})});
+  const positions=[...members].sort((a,b)=>a-b), first=positions[0], groupId=++groupSequence;
+  const keys=[rows,ids,selections,customColors,groups];
+  for(const arr of keys){
+    const picked=positions.map(i=>arr[i]);
+    for(let j=positions.length-1;j>=0;j--)arr.splice(positions[j],1);
+    arr.splice(first,0,...(arr===groups?picked.map(()=>groupId):picked));
+  }
+  checked.clear();render();status(`${positions.length} atividades agrupadas em ${groupName(groupId)}.`);
+}
+function ungroupSelected(){
+  const groupIds=new Set(ids.map((id,i)=>checked.has(id)?groups[i]:null).filter(g=>g!==null));
+  ids.forEach((id,i)=>{if(checked.has(id)||groupIds.has(groups[i]))groups[i]=null});
+  checked.clear();render();status("Atividades desagrupadas.");
+}
+document.getElementById("groupBtn").onclick=groupSelected;
+document.getElementById("ungroupBtn").onclick=ungroupSelected;
+let customColors=rows.map(()=>null);
+function chosenColor(i){return customColors[i]||((options.find(o=>o.label===selections[i])||{}).color||"#ffffff")}
+function renderConfig(){
+  const wrap=document.getElementById("configGrid");wrap.innerHTML="";
+  options.forEach((o,i)=>{
+    const item=document.createElement("div");item.className="config-item";
+    const input=document.createElement("input");input.type="text";input.value=o.label;input.title="Texto da opção";
+    input.onchange=()=>{const old=o.label;const next=input.value.trim();if(!next){input.value=old;return}if(options.some((x,j)=>j!==i&&x.label===next)){status("Esta opção já existe.");input.value=old;return}o.label=next;selections=selections.map(x=>x===old?next:x);render()};
+    const color=document.createElement("input");color.type="color";color.value=o.color;color.title="Cor padrão";
+    color.oninput=()=>{o.color=color.value;render()};
+    const del=document.createElement("button");del.type="button";del.className="move";del.textContent="×";del.title="Remover opção";
+    del.onclick=()=>{if(options.length===0){return}const old=o.label;options.splice(i,1);selections=selections.map(x=>x===old?((options[0]&&options[0].label)||""):x);renderConfig();render()};
+    item.append(input,color,del);wrap.appendChild(item);
+  });
+}
+document.getElementById("addOption").onclick=()=>{options.push({label:"Opção "+(options.length+1),color:"#e5e7eb"});renderConfig();render()};
+let ids=rows.map((_,i)=>`initial-${i}`);
+const clocks=new Map();
+let nextId=0;
+function uniqueId(){return `r-${++nextId}-${Date.now()}`}
+function clock(id){if(!clocks.has(id))clocks.set(id,{elapsed:0,start:0,running:false,begin:null,end:null});return clocks.get(id)}
+function millis(id){const c=clock(id);return c.elapsed+(c.running?Date.now()-c.start:0)}
+function groupDuration(groupId){
+  return ids.reduce((total,id,i)=>total+(groups[i]===groupId?millis(id):0),0);
+}
+function formatted(ms){const secs=Math.floor(ms/1000);return [Math.floor(secs/3600),Math.floor(secs/60)%60,secs%60].map(x=>String(x).padStart(2,'0')).join(':')}
+function localDateInput(ms){
+  const d=new Date(ms);
+  const z=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+}
+function dateTime(ms){if(ms===null||ms===undefined)return '—';return new Date(ms).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function toggle(id){const c=clock(id);if(c.end!==null)return;if(c.running){c.elapsed=millis(id);c.running=false}else{if(c.begin===null)c.begin=Date.now();c.start=Date.now();c.running=true}render()}
+function finish(id){const c=clock(id);if(c.begin===null)return;if(c.running){c.elapsed=millis(id);c.running=false}c.end=Date.now();render();status('Atividade finalizada. Horário de fim registrado.')}
+function reset(id){const c=clock(id);c.elapsed=0;c.running=false;c.start=0;c.begin=null;c.end=null;render();status('Temporizador e horários zerados.')}
+function updateClocks(){document.querySelectorAll('[data-clock]').forEach(el=>{const id=el.dataset.clock;el.textContent=formatted(millis(id));const duration=document.querySelector('[data-duration="'+id+'"]');if(duration)duration.textContent=formatted(millis(id));});
+  document.querySelectorAll("[data-group-total]").forEach(el=>{
+    el.textContent=formatted(groupDuration(Number(el.dataset.groupTotal)));
+  });
+}
+setInterval(updateClocks,250);
+const headerRow = document.getElementById("headerRow");
+const tableBody = document.getElementById("tableBody");
+const statusEl = document.getElementById("status");
+const STORAGE_KEY="organizador_smed_duas_coletas_v1";
+const OLD_STORAGE_KEY="organizador_atividades_autosave_v1";
+let activeTab=0;
+let saveHandle=null;
+const makeBlank=()=>({headers:[...defaultHeaders],rows:[],ids:[],selections:[],customColors:[],groups:[],groupSequence:0,nextId:0,clocks:[]});
+let datasets=[makeBlank(),makeBlank()];
+let collectionNames=["Coleta 1","Coleta 2"];
+function uniqueSheetNames(){
+  const used=new Set();
+  return datasets.map((_,i)=>{
+    const base=(collectionNames[i]||`Coleta ${i+1}`).replace(/[\\\\/*?:\\[\\]]/g," ").replace(/^'+|'+$/g,"").trim().slice(0,31)||`Coleta ${i+1}`;
+    let name=base,n=2;
+    while(used.has(name.toLowerCase())){
+      const suffix=` (${n++})`;name=base.slice(0,31-suffix.length)+suffix;
+    }
+    used.add(name.toLowerCase());return name;
+  });
+}
+function renderTabs(){
+  const bar=document.getElementById("tabbar");bar.replaceChildren();
+  collectionNames.forEach((name,i)=>{
+    const b=document.createElement("button");b.type="button";b.className="tab"+(i===activeTab?" active":"");
+    b.dataset.tab=String(i);b.textContent=name;b.title="Abrir "+name;
+    b.addEventListener("click",()=>switchCollection(i));bar.appendChild(b);
+  });
+}
+function switchCollection(target){
+  if(target===activeTab||target<0||target>=datasets.length)return;
+  clearTimeout(saveHandle);saveNow();activeTab=target;
+  loadDataset(datasets[activeTab]);renderTabs();renderConfig();render();saveNow();
+  statusEl.textContent=`${collectionNames[activeTab]} selecionada.`;
+}
+document.getElementById("newCollection").addEventListener("click",()=>{
+  const name=prompt("Nome da nova coleta:",`Coleta ${datasets.length+1}`);
+  if(name===null)return;
+  if(!name.trim()){alert("Informe um nome.");return}
+  clearTimeout(saveHandle);saveNow();
+  datasets.push(makeBlank());collectionNames.push(name.trim());activeTab=datasets.length-1;
+  loadDataset(datasets[activeTab]);renderTabs();render();saveNow();
+  statusEl.textContent=`Coleta "${name.trim()}" criada.`;
+});
+document.getElementById("renameCollection").addEventListener("click",()=>{
+  const name=prompt("Novo nome da coleta:",collectionNames[activeTab]);
+  if(name===null)return;
+  if(!name.trim()){alert("Informe um nome.");return}
+  collectionNames[activeTab]=name.trim();renderTabs();saveNow();
+});
+document.getElementById("removeCollection").addEventListener("click",()=>{
+  if(datasets.length<=1){alert("É necessário manter pelo menos uma coleta.");return}
+  if(!confirm(`Excluir definitivamente "${collectionNames[activeTab]}" e todas as suas atividades? Essa ação não pode ser desfeita.`))return;
+  clearTimeout(saveHandle);
+  datasets.splice(activeTab,1);collectionNames.splice(activeTab,1);
+  activeTab=Math.min(activeTab,datasets.length-1);
+  loadDataset(datasets[activeTab]);renderTabs();render();saveNow();
+  statusEl.textContent="Coleta excluída e alteração salva.";
+});
+function snapshotCurrent(){
+  return {headers,rows,ids,selections,customColors,groups,groupSequence,nextId,
+    clocks:[...clocks.entries()].map(([id,c])=>[id,{...c,elapsed:millis(id),running:false,start:0}])};
+}
+function loadDataset(v){
+  headers=v.headers||[...defaultHeaders];rows=v.rows||[];ids=v.ids||[];
+  selections=v.selections||rows.map(()=>"");customColors=v.customColors||rows.map(()=>null);
+  groups=v.groups||rows.map(()=>null);groupSequence=v.groupSequence||0;nextId=v.nextId||0;
+  checked.clear();clocks.clear();
+  (v.clocks||[]).forEach(([id,c])=>clocks.set(id,{...c,running:false,start:0}));
+}
+function saveNow(){
+  try{
+    datasets[activeTab]=snapshotCurrent();
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify({datasets,collectionNames,options,activeTab}));}catch(storageError){console.warn('Salvamento local indisponivel no iPhone',storageError);}
+    const time=new Date().toLocaleTimeString("pt-BR");
+    statusEl.textContent="Alterações salvas • "+time;
+    const hint=document.getElementById("saveHint");
+    if(hint)hint.textContent="Último salvamento: "+time;
+  }catch(e){statusEl.textContent="Falha ao salvar: "+e.message}
+}
+function scheduleSave(){
+  clearTimeout(saveHandle);
+  const hint=document.getElementById("saveHint");
+  if(hint)hint.textContent="Salvando alterações...";
+  saveHandle=setTimeout(saveNow,250);
+}
+document.getElementById("manualSaveBtn").addEventListener("click",()=>{
+  clearTimeout(saveHandle);
+  saveNow();
+  const btn=document.getElementById("manualSaveBtn");
+  btn.textContent="✓ Alterações salvas";
+  setTimeout(()=>{btn.textContent="💾 Salvar alterações"},1700);
+});
+function restoreSaved(){
+  try{
+    let raw=null;try{raw=localStorage.getItem(STORAGE_KEY);}catch(storageError){console.warn('Leitura local indisponivel no iPhone',storageError);}
+    if(raw){
+      const v=JSON.parse(raw);
+      if(Array.isArray(v.datasets)&&v.datasets.length)datasets=v.datasets;
+      if(Array.isArray(v.collectionNames)&&v.collectionNames.length===datasets.length)collectionNames=v.collectionNames;
+      else collectionNames=datasets.map((_,i)=>`Coleta ${i+1}`);
+      if(Array.isArray(v.options))options=v.options;
+      activeTab=Math.max(0,Math.min(Number(v.activeTab)||0,datasets.length-1));
+    }else{
+      let old=null;try{old=localStorage.getItem(OLD_STORAGE_KEY);}catch(storageError){}
+      if(old){
+        const v=JSON.parse(old);
+        if(Array.isArray(v.rows)&&Array.isArray(v.ids)){
+          datasets[0]={...makeBlank(),...v};
+          if(Array.isArray(v.options))options=v.options;
+        }
+      }
+    }
+    loadDataset(datasets[activeTab]);
+    renderTabs();
+    return true;
+  }catch(e){statusEl.textContent="Falha ao recuperar dados: "+e.message;return false}
+}
+function status(msg){statusEl.textContent=msg;scheduleSave()}
+function render(){
+  scheduleSave();
+  headerRow.innerHTML="";
+  ["Selecionar","Grupo"].forEach(h=>{const th=document.createElement("th");th.textContent=h;headerRow.appendChild(th)});
+  headers.forEach(h=>{const th=document.createElement("th");th.textContent=h;if(String(h).toLowerCase().includes("descri"))th.className="description-col";headerRow.appendChild(th)});
+  ["Classificação","Início", "Fim", "Duração","Total do grupo"].forEach(h=>{const th=document.createElement("th");th.textContent=h;headerRow.appendChild(th)});
+  const actionTh=document.createElement("th");actionTh.textContent="Ações";headerRow.appendChild(actionTh);
+  tableBody.innerHTML="";
+  rows.forEach((row,i)=>{
+    const tr=document.createElement("tr");
+    tr.style.backgroundColor=chosenColor(i);
+    const chooseCell=document.createElement("td");
+    const check=document.createElement("input");check.type="checkbox";check.checked=checked.has(ids[i]);check.title="Selecionar para agrupar";
+    check.onchange=()=>{if(check.checked)checked.add(ids[i]);else checked.delete(ids[i])};
+    chooseCell.appendChild(check);tr.appendChild(chooseCell);
+    const groupCell=document.createElement("td");groupCell.textContent=groupName(groups[i]);groupCell.style.whiteSpace="nowrap";groupCell.style.fontWeight=groups[i]===null?"normal":"bold";tr.appendChild(groupCell);
+    const num=document.createElement("td");num.className="num";num.textContent=String(i+1);tr.appendChild(num);
+    // If the source has no first header for this number column, keep a dedicated row number and editable data cells.
+    row.forEach((value,j)=>{
+      const td=document.createElement("td");if(String(headers[j]).toLowerCase().includes("descri"))td.className="description-col";
+      const input=document.createElement(td.classList.contains("description-col")?"textarea":"input");input.value=value??"";if(input.tagName==="TEXTAREA"){input.rows=2;input.style.height="auto";input.style.height=Math.max(56,input.scrollHeight+4)+"px";}input.setAttribute("aria-label",`${headers[j]||"Coluna "+(j+1)}, linha ${i+1}`);
+      input.addEventListener("input",()=>{rows[i][j]=input.value;scheduleSave();if(input.tagName==="TEXTAREA"){input.style.height="auto";input.style.height=Math.max(56,input.scrollHeight+4)+"px";}});
+      td.appendChild(input);tr.appendChild(td);
+    });
+    const classCell=document.createElement("td");
+    const sel=document.createElement("select");
+    options.forEach(o=>{const opt=document.createElement("option");opt.value=o.label;opt.textContent=o.label;sel.appendChild(opt)});
+    sel.value=selections[i]||((options[0]&&options[0].label)||"");
+    sel.onchange=()=>{selections[i]=sel.value;customColors[i]=null;render()};
+    classCell.appendChild(sel);tr.appendChild(classCell);
+    const c=clock(ids[i]);
+    for(const field of ["begin","end"]){
+      const td=document.createElement("td");
+      const input=document.createElement("input");
+      input.type="datetime-local";input.step="1";input.className="time-editor";
+      input.value=c[field]===null?"":localDateInput(c[field]);
+      input.title=field==="begin"?"Editar início":"Editar fim";
+      input.onchange=()=>{
+        const parsed=input.value?new Date(input.value).getTime():null;
+        if(parsed!==null&&!Number.isFinite(parsed)){status("Data ou hora inválida.");render();return}
+        const other=field==="begin"?c.end:c.begin;
+        if(parsed!==null&&other!==null&&((field==="begin"&&parsed>other)||(field==="end"&&parsed<other))){
+          alert("O fim não pode ser anterior ao início.");render();return;
+        }
+        if(c.running){c.elapsed=millis(ids[i]);c.running=false;c.start=0}
+        c[field]=parsed;
+        if(c.begin!==null&&c.end!==null)c.elapsed=Math.max(0,c.end-c.begin);
+        else if(c.begin===null)c.elapsed=0;
+        render();status("Horário alterado e salvo automaticamente.");
+      };
+      td.appendChild(input);tr.appendChild(td);
+    }
+    const durationTd=document.createElement("td");
+    durationTd.style.whiteSpace="nowrap";durationTd.dataset.duration=ids[i];
+    durationTd.textContent=formatted(millis(ids[i]));tr.appendChild(durationTd);
+    const groupId=groups[i];
+    if(groupId!==null){
+      const previous=groups.slice(0,i).includes(groupId);
+      if(!previous){
+        const totalCell=document.createElement("td");
+        totalCell.dataset.groupTotal=String(groupId);
+        totalCell.style.cssText="font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap;border-left:2px solid #94a3b8;background:#e8f0ff;color:#173f73";
+        totalCell.rowSpan=groups.filter(g=>g===groupId).length;
+        totalCell.textContent=formatted(groupDuration(groupId));
+        tr.appendChild(totalCell);
+      }
+    }else{
+      const totalCell=document.createElement("td");
+      totalCell.textContent="—";totalCell.style.textAlign="center";
+      tr.appendChild(totalCell);
+    }
+    const actions=document.createElement("td");actions.className="actions";
+    const timer=document.createElement('div');timer.className='timer-controls';
+    const display=document.createElement('span');display.className='clock';display.dataset.clock=ids[i];display.textContent=formatted(millis(ids[i]));
+    const play=document.createElement('button');play.type='button';play.className='timer-btn';play.dataset.toggle=ids[i];play.textContent=c.running?'⏸ Pausar':'▶ Play';play.disabled=c.end!==null;play.onclick=()=>toggle(ids[i]);
+    const zero=document.createElement('button');zero.type='button';zero.className='timer-btn';zero.textContent='↺ Zerar';zero.onclick=()=>reset(ids[i]);
+    const finishBtn=document.createElement('button');finishBtn.type='button';finishBtn.className='timer-btn';finishBtn.textContent='■ Finalizar';finishBtn.disabled=c.begin===null||c.end!==null;finishBtn.onclick=()=>finish(ids[i]);timer.append(display,play,finishBtn,zero);actions.append(timer);
+    const movementLabel=document.createElement("span");movementLabel.textContent="Individual: ";movementLabel.style.fontSize="12px";actions.append(movementLabel);
+    const up=document.createElement("button");up.type="button";up.className="move";up.textContent="↑";up.title="Mover para cima";up.disabled=i===0;up.onclick=()=>move(i,-1);
+    const down=document.createElement("button");down.type="button";down.className="move";down.textContent="↓";down.title="Mover para baixo";down.disabled=i===rows.length-1;down.onclick=()=>move(i,1);
+    const del=document.createElement("button");del.type="button";del.className="move";del.textContent="×";del.title="Excluir linha";del.onclick=()=>{clocks.delete(ids[i]);checked.delete(ids[i]);ids.splice(i,1);rows.splice(i,1);selections.splice(i,1);customColors.splice(i,1);groups.splice(i,1);render();status("Linha excluída.")};
+    actions.append(up,down);
+    if(groups[i]!==null){
+      const groupLabel=document.createElement("span");groupLabel.textContent=" Grupo: ";groupLabel.style.fontSize="12px";
+      const gUp=document.createElement("button");gUp.type="button";gUp.className="move";gUp.textContent="⇧";gUp.title="Mover grupo para cima";gUp.disabled=groupBounds(i)[0]===0;gUp.onclick=()=>reorderBlock(i,-1);
+      const gDown=document.createElement("button");gDown.type="button";gDown.className="move";gDown.textContent="⇩";gDown.title="Mover grupo para baixo";gDown.disabled=groupBounds(i)[1]===rows.length-1;gDown.onclick=()=>reorderBlock(i,1);
+      actions.append(groupLabel,gUp,gDown);
+    }
+    actions.append(del);tr.appendChild(actions);tableBody.appendChild(tr);
+  });
+  const numberHeader=document.createElement("th");numberHeader.textContent="#";headerRow.insertBefore(numberHeader,headerRow.children[2]);
+}
+function move(i,delta){
+  const j=i+delta;if(j<0||j>=rows.length)return;
+  [rows[i],rows[j]]=[rows[j],rows[i]];[ids[i],ids[j]]=[ids[j],ids[i]];
+  [selections[i],selections[j]]=[selections[j],selections[i]];
+  [customColors[i],customColors[j]]=[customColors[j],customColors[i]];
+  const oldGroup=groups[i],neighborGroup=groups[j];
+  // Moving within the same group retains membership. Crossing a group boundary detaches the moved activity.
+  if(oldGroup!==neighborGroup){groups[i]=neighborGroup;groups[j]=null;}
+  render();status(`Atividade movida individualmente para a posição ${j+1}.`);
+}
+document.getElementById("resetSmedBtn").addEventListener("click",()=>{
+  const ok=window.confirm("RESETAR TODO O SMED?\n\nSerão apagados permanentemente: todas as atividades, descrições, responsáveis, observações, grupos, horários e cronômetros. As opções e cores configuradas na lista suspensa serão preservadas.\n\nO salvamento automático também será substituído pelos dados vazios.\n\nDeseja confirmar?");
+  if(!ok){statusEl.textContent="Reset cancelado. Nenhum dado foi apagado.";return}
+  clearTimeout(saveHandle);
+  headers=[...defaultHeaders];rows=[];ids=[];selections=[];customColors=[];groups=[];
+  groupSequence=0;nextId=0;checked.clear();clocks.clear();
+  renderConfig();render();clearTimeout(saveHandle);saveNow();
+  statusEl.textContent="Atividades do SMED apagadas. Configurações da lista suspensa preservadas e salvamento atualizado.";
+});
+document.getElementById("addBtn").addEventListener("click",()=>{
+  rows.push(headers.map(()=> ""));ids.push(uniqueId());selections.push(((options[0]&&options[0].label)||""));customColors.push(null);groups.push(null);render();status("Nova linha adicionada.");
+});
+document.getElementById("exportBtn").addEventListener("click",async()=>{
+  datasets[activeTab]=snapshotCurrent();
+  const colsFor=d=>["Grupo",...d.headers,"Classificação","Início","Fim","Duração","Total do grupo"];
+  function exportRows(d){
+    const groupOrder=[...new Set(d.groups.filter(g=>g!==null&&g!==undefined))];
+    const gname=g=>g===null||g===undefined?"":`Grupo ${groupOrder.indexOf(g)+1}`;
+    const cMap=new Map(d.clocks);
+    const duration=id=>cMap.get(id)?.elapsed||0;
+    const gtotal=g=>d.ids.reduce((sum,id,i)=>sum+(d.groups[i]===g?duration(id):0),0);
+    return d.rows.map((r,i)=>{
+      const c=cMap.get(d.ids[i])||{begin:null,end:null};
+      return [gname(d.groups[i]),...r,d.selections[i]||"",c.begin===null?"":dateTime(c.begin),c.end===null?"":dateTime(c.end),formatted(duration(d.ids[i])),d.groups[i]===null?"":formatted(gtotal(d.groups[i]))];
+    });
+  }
+  if(window.ExcelJS){
+    try{
+      const wb=new ExcelJS.Workbook();
+      const sheetNames=uniqueSheetNames();
+      datasets.forEach((d,index)=>{
+        const cols=colsFor(d),values=exportRows(d);
+        const sheet=wb.addWorksheet(sheetNames[index]);
+        sheet.addRow(cols);
+        sheet.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};
+        sheet.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF173F73"}};
+        cols.forEach((h,i)=>sheet.getColumn(i+1).width=Math.max(17,Math.min(45,h.length+9)));
+        values.forEach((values,i)=>{
+          const row=sheet.addRow(values);
+          const color=d.customColors[i]||((options.find(o=>o.label===d.selections[i])||{}).color||"#ffffff");
+          const argb="FF"+color.replace("#","").toUpperCase();
+          row.eachCell({includeEmpty:true},cell=>cell.fill={type:"pattern",pattern:"solid",fgColor:{argb}});
+        });
+        const totalCol=cols.length;
+        const visited=new Set();
+        d.groups.forEach((g,i)=>{
+          if(g===null||g===undefined||visited.has(g))return;
+          visited.add(g);
+          const positions=d.groups.map((v,j)=>v===g?j:-1).filter(j=>j>=0);
+          const first=positions[0]+2,last=positions[positions.length-1]+2;
+          const contiguous=positions.every((v,j)=>j===0||v===positions[j-1]+1);
+          const total=values[i][totalCol-1];
+          if(contiguous&&positions.length>1){
+            positions.forEach(j=>sheet.getCell(j+2,totalCol).value=null);
+            sheet.mergeCells(first,totalCol,last,totalCol);
+          }
+          const cell=sheet.getCell(first,totalCol);
+          cell.value=total;cell.numFmt="@";
+          cell.font={bold:true,color:{argb:"FF173F73"}};
+          cell.alignment={vertical:"middle",horizontal:"center"};
+        });
+      });
+      const buffer=await wb.xlsx.writeBuffer();
+      const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      const url=URL.createObjectURL(blob),a=document.createElement("a");
+      a.href=url;a.download="SMED_coletas.xlsx";a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      status("Excel exportado com "+datasets.length+" abas de coleta.");return;
+    }catch(err){status("Erro na exportação: "+err.message);return}
+  }
+  if(window.XLSX){
+    const wb=XLSX.utils.book_new();
+    const sheetNames=uniqueSheetNames();
+    datasets.forEach((d,i)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([colsFor(d),...exportRows(d)]),sheetNames[i]));
+    XLSX.writeFile(wb,"SMED_coletas.xlsx");
+    status("Excel exportado com duas abas (sem as cores visuais).");
+  }else status("Conecte-se à internet para carregar a biblioteca Excel.");
+});
+document.getElementById("csvBtn").addEventListener("click",()=>{
+  const escapeCell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const csv=[['Grupo',...headers,'Classificação','Início','Fim','Duração','Total do grupo'],...rows.map((r,i)=>{const c=clock(ids[i]);return [groups[i]===null?"":groupName(groups[i]),...r,selections[i],c.begin===null?'':dateTime(c.begin),c.end===null?'':dateTime(c.end),formatted(millis(ids[i])),groups[i]===null?"":formatted(groupDuration(groups[i]))]})].map(r=>r.map(escapeCell).join(";")).join("\r\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="planilha_reorganizada.csv";a.click();URL.revokeObjectURL(url);status("Arquivo CSV exportado.");
+});
+document.getElementById("fileInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    if(file.name.toLowerCase().endsWith(".csv")){
+      const text=await file.text();
+      const lines=text.replace(/^\ufeff/,"").split(/\r?\n/).filter(x=>x.trim()!=="");
+      const parseLine=line=>{let out=[],cur="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&quoted){cur+='"';i++}else if(c==='"'){quoted=!quoted}else if((c===";"||c===",")&&!quoted){out.push(cur);cur=""}else cur+=c}out.push(cur);return out};
+      const matrix=lines.map(parseLine);headers=matrix.shift()||defaultHeaders;rows=matrix.map(r=>headers.map((_,i)=>r[i]??""));
+    }else{
+      if(!window.XLSX){status("Biblioteca Excel indisponível. Conecte-se à internet e tente novamente.");return}
+      const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});const matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});
+      if(!matrix.length)throw new Error("A planilha está vazia.");
+      headers=matrix[0].map((h,i)=>String(h||`Coluna ${i+1}`));rows=matrix.slice(1).filter(r=>r.some(v=>v!=="")).map(r=>headers.map((_,i)=>String(r[i]??"")));
+    }
+    if(!headers.length)headers=[...defaultHeaders];
+    const importedGroupIndex=headers.indexOf("Grupo");
+    const importedGroups=rows.map(r=>importedGroupIndex<0?"":String(r[importedGroupIndex]||""));
+    const groupMap=new Map();
+    groups=importedGroups.map(g=>{
+      if(!g)return null;
+      if(!groupMap.has(g))groupMap.set(g,++groupSequence);
+      return groupMap.get(g);
+    });
+    checked.clear();
+    const classificationIndex=headers.indexOf("Classificação");
+    const colorIndex=headers.indexOf("Cor da linha");
+    const timerCols=["Início","Fim","Duração","Total do grupo"];
+    const keep=headers.map((h,i)=>i).filter(i=>i!==classificationIndex&&i!==colorIndex&&i!==importedGroupIndex&&!timerCols.includes(headers[i]));
+    selections=rows.map(r=>classificationIndex>=0&&options.some(o=>o.label===r[classificationIndex])?r[classificationIndex]:((options[0]&&options[0].label)||""));
+    customColors=rows.map(r=>colorIndex>=0&&/^#[0-9a-fA-F]{6}$/.test(r[colorIndex])?r[colorIndex]:null);
+    rows=rows.map(r=>keep.map(i=>r[i]));headers=keep.map(i=>headers[i]);
+    ids=rows.map(()=>uniqueId());clocks.clear();
+    render();status(`Arquivo "${file.name}" importado. ${rows.length} linha(s) carregada(s).`);
+  }catch(err){status("Não foi possível importar o arquivo: "+err.message)}
+  e.target.value="";
+});
+
+// iPhone/Safari: controles usam eventos click nativos.
+
+
+restoreSaved();renderConfig();render();
+window.addEventListener("pagehide",saveNow);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow()});
+</script>
+</body>
+</html>
