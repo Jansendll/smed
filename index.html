@@ -80,6 +80,15 @@ th{background:#1b3e6a;position:sticky;top:0;z-index:1}
 .activity-section .section-heading{margin-bottom:10px}
 .activity-section+.info{margin:5px 0 8px;padding:8px 12px;font-size:12px}
 @media(max-width:720px){.summary-note{display:none}}
+
+/* Mobile: Acoes nao deve sobrepor Descricao */
+@media(max-width:720px){
+ td.actions{position:static!important;right:auto!important;z-index:auto!important;background:inherit!important;min-width:260px!important;}
+ th:last-child{position:static!important;right:auto!important;z-index:auto!important;}
+ .table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+ td.description-col,th.description-col{min-width:340px!important;}
+ .timer-controls{display:flex!important;flex-wrap:wrap!important;gap:6px!important;}
+}
 </style>
 </head>
 <body>
