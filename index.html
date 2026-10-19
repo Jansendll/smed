@@ -80,24 +80,6 @@ th{background:#1b3e6a;position:sticky;top:0;z-index:1}
 .activity-section .section-heading{margin-bottom:10px}
 .activity-section+.info{margin:5px 0 8px;padding:8px 12px;font-size:12px}
 @media(max-width:720px){.summary-note{display:none}}
-
-/* Correcoes para uso em celular */
-button,.file-label,.tab,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-button,.file-label{min-height:44px}
-@media(max-width:720px){
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{min-width:1180px}
-  .toolbar{display:grid;grid-template-columns:1fr;gap:8px}
-  .toolbar button,.toolbar .file-label{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center}
-  .tabbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px}
-  .tab{flex:0 0 auto;min-height:44px}
-  td.actions{position:sticky;right:0;background:#fff;z-index:2;min-width:220px}
-  tbody tr:nth-child(even) td.actions{background:#f8fafc}
-  .timer-controls{flex-wrap:wrap}
-  .timer-btn,.move{min-height:40px;min-width:40px}
-  input,select,textarea{font-size:16px!important}
-}
-
 </style>
 </head>
 <body>
@@ -130,8 +112,8 @@ button,.file-label{min-height:44px}
     <div class="toolbar">
       <label class="file-label" for="fileInput">↑ Importar Excel / CSV</label>
       <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
-      <button class="primary" id="exportBtn" type="button">↓ Exportar Excel</button>
-      <button class="secondary" id="csvBtn" type="button">Exportar CSV</button>
+      <button class="primary" id="exportBtn">↓ Exportar Excel</button>
+      <button class="secondary" id="csvBtn">Exportar CSV</button>
     </div>
   </details>
   <details class="config">
@@ -143,9 +125,9 @@ button,.file-label{min-height:44px}
   <section class="control-section activity-section">
     <div class="section-heading"><span>03</span><strong>Atividades e grupos</strong><small>Organize a sequência de execução</small></div>
     <div class="toolbar">
-      <button class="primary" id="addBtn" type="button">＋ Adicionar atividade</button>
-      <button class="secondary" id="groupBtn" type="button">Agrupar selecionadas</button>
-      <button class="secondary" id="ungroupBtn" type="button">Desagrupar</button>
+      <button class="primary" id="addBtn">＋ Adicionar atividade</button>
+      <button class="secondary" id="groupBtn">Agrupar selecionadas</button>
+      <button class="secondary" id="ungroupBtn">Desagrupar</button>
       <button class="danger" id="resetSmedBtn" type="button">↻ Resetar SMED</button>
     </div>
   </section>
@@ -162,17 +144,11 @@ button,.file-label{min-height:44px}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
-
-window.addEventListener('error',function(e){
-  var el=document.getElementById('status');
-  if(el) el.textContent='Erro no navegador: '+(e.message||'erro desconhecido');
-});
-
 const defaultHeaders = ["ID", "Descrição", "Responsável", "Observações"];
 let headers = [...defaultHeaders];
 let rows = [];
 let options = [];
-let selections=rows.map(()=>((options[0]&&options[0].label)||""));
+let selections=rows.map(()=>(options[0]?.label||""));
 let groups=rows.map(()=>null);
 let checked=new Set();
 let groupSequence=0;
@@ -226,7 +202,7 @@ function ungroupSelected(){
 document.getElementById("groupBtn").onclick=groupSelected;
 document.getElementById("ungroupBtn").onclick=ungroupSelected;
 let customColors=rows.map(()=>null);
-function chosenColor(i){return customColors[i]||((options.find(o=>o.label===selections[i])||{}).color||"#ffffff")}
+function chosenColor(i){return customColors[i]||options.find(o=>o.label===selections[i])?.color||"#ffffff"}
 function renderConfig(){
   const wrap=document.getElementById("configGrid");wrap.innerHTML="";
   options.forEach((o,i)=>{
@@ -235,8 +211,8 @@ function renderConfig(){
     input.onchange=()=>{const old=o.label;const next=input.value.trim();if(!next){input.value=old;return}if(options.some((x,j)=>j!==i&&x.label===next)){status("Esta opção já existe.");input.value=old;return}o.label=next;selections=selections.map(x=>x===old?next:x);render()};
     const color=document.createElement("input");color.type="color";color.value=o.color;color.title="Cor padrão";
     color.oninput=()=>{o.color=color.value;render()};
-    const del=document.createElement("button");del.type="button";del.className="move";del.textContent="×";del.title="Remover opção";
-    del.onclick=()=>{if(options.length===0){return}const old=o.label;options.splice(i,1);selections=selections.map(x=>x===old?((options[0]&&options[0].label)||""):x);renderConfig();render()};
+    const del=document.createElement("button");del.className="move";del.textContent="×";del.title="Remover opção";
+    del.onclick=()=>{if(options.length===0){return}const old=o.label;options.splice(i,1);selections=selections.map(x=>x===old?(options[0]?.label||""):x);renderConfig();render()};
     item.append(input,color,del);wrap.appendChild(item);
   });
 }
@@ -339,7 +315,7 @@ function loadDataset(v){
 function saveNow(){
   try{
     datasets[activeTab]=snapshotCurrent();
-    try{localStorage.setItem(STORAGE_KEY,JSON.stringify({datasets,collectionNames,options,activeTab}));}catch(storageError){console.warn('Salvamento local indisponivel no iPhone',storageError);}
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({datasets,collectionNames,options,activeTab}));
     const time=new Date().toLocaleTimeString("pt-BR");
     statusEl.textContent="Alterações salvas • "+time;
     const hint=document.getElementById("saveHint");
@@ -361,7 +337,7 @@ document.getElementById("manualSaveBtn").addEventListener("click",()=>{
 });
 function restoreSaved(){
   try{
-    let raw=null;try{raw=localStorage.getItem(STORAGE_KEY);}catch(storageError){console.warn('Leitura local indisponivel no iPhone',storageError);}
+    const raw=localStorage.getItem(STORAGE_KEY);
     if(raw){
       const v=JSON.parse(raw);
       if(Array.isArray(v.datasets)&&v.datasets.length)datasets=v.datasets;
@@ -370,7 +346,7 @@ function restoreSaved(){
       if(Array.isArray(v.options))options=v.options;
       activeTab=Math.max(0,Math.min(Number(v.activeTab)||0,datasets.length-1));
     }else{
-      let old=null;try{old=localStorage.getItem(OLD_STORAGE_KEY);}catch(storageError){}
+      const old=localStorage.getItem(OLD_STORAGE_KEY);
       if(old){
         const v=JSON.parse(old);
         if(Array.isArray(v.rows)&&Array.isArray(v.ids)){
@@ -412,7 +388,7 @@ function render(){
     const classCell=document.createElement("td");
     const sel=document.createElement("select");
     options.forEach(o=>{const opt=document.createElement("option");opt.value=o.label;opt.textContent=o.label;sel.appendChild(opt)});
-    sel.value=selections[i]||((options[0]&&options[0].label)||"");
+    sel.value=selections[i]||(options[0]?.label||"");
     sel.onchange=()=>{selections[i]=sel.value;customColors[i]=null;render()};
     classCell.appendChild(sel);tr.appendChild(classCell);
     const c=clock(ids[i]);
@@ -459,18 +435,18 @@ function render(){
     const actions=document.createElement("td");actions.className="actions";
     const timer=document.createElement('div');timer.className='timer-controls';
     const display=document.createElement('span');display.className='clock';display.dataset.clock=ids[i];display.textContent=formatted(millis(ids[i]));
-    const play=document.createElement('button');play.type='button';play.className='timer-btn';play.dataset.toggle=ids[i];play.textContent=c.running?'⏸ Pausar':'▶ Play';play.disabled=c.end!==null;play.onclick=()=>toggle(ids[i]);
-    const zero=document.createElement('button');zero.type='button';zero.className='timer-btn';zero.textContent='↺ Zerar';zero.onclick=()=>reset(ids[i]);
-    const finishBtn=document.createElement('button');finishBtn.type='button';finishBtn.className='timer-btn';finishBtn.textContent='■ Finalizar';finishBtn.disabled=c.begin===null||c.end!==null;finishBtn.onclick=()=>finish(ids[i]);timer.append(display,play,finishBtn,zero);actions.append(timer);
+    const play=document.createElement('button');play.className='timer-btn';play.dataset.toggle=ids[i];play.textContent=c.running?'⏸ Pausar':'▶ Play';play.disabled=c.end!==null;play.onclick=()=>toggle(ids[i]);
+    const zero=document.createElement('button');zero.className='timer-btn';zero.textContent='↺ Zerar';zero.onclick=()=>reset(ids[i]);
+    const finishBtn=document.createElement('button');finishBtn.className='timer-btn';finishBtn.textContent='■ Finalizar';finishBtn.disabled=c.begin===null||c.end!==null;finishBtn.onclick=()=>finish(ids[i]);timer.append(display,play,finishBtn,zero);actions.append(timer);
     const movementLabel=document.createElement("span");movementLabel.textContent="Individual: ";movementLabel.style.fontSize="12px";actions.append(movementLabel);
-    const up=document.createElement("button");up.type="button";up.className="move";up.textContent="↑";up.title="Mover para cima";up.disabled=i===0;up.onclick=()=>move(i,-1);
-    const down=document.createElement("button");down.type="button";down.className="move";down.textContent="↓";down.title="Mover para baixo";down.disabled=i===rows.length-1;down.onclick=()=>move(i,1);
-    const del=document.createElement("button");del.type="button";del.className="move";del.textContent="×";del.title="Excluir linha";del.onclick=()=>{clocks.delete(ids[i]);checked.delete(ids[i]);ids.splice(i,1);rows.splice(i,1);selections.splice(i,1);customColors.splice(i,1);groups.splice(i,1);render();status("Linha excluída.")};
+    const up=document.createElement("button");up.className="move";up.textContent="↑";up.title="Mover para cima";up.disabled=i===0;up.onclick=()=>move(i,-1);
+    const down=document.createElement("button");down.className="move";down.textContent="↓";down.title="Mover para baixo";down.disabled=i===rows.length-1;down.onclick=()=>move(i,1);
+    const del=document.createElement("button");del.className="move";del.textContent="×";del.title="Excluir linha";del.onclick=()=>{clocks.delete(ids[i]);checked.delete(ids[i]);ids.splice(i,1);rows.splice(i,1);selections.splice(i,1);customColors.splice(i,1);groups.splice(i,1);render();status("Linha excluída.")};
     actions.append(up,down);
     if(groups[i]!==null){
       const groupLabel=document.createElement("span");groupLabel.textContent=" Grupo: ";groupLabel.style.fontSize="12px";
-      const gUp=document.createElement("button");gUp.type="button";gUp.className="move";gUp.textContent="⇧";gUp.title="Mover grupo para cima";gUp.disabled=groupBounds(i)[0]===0;gUp.onclick=()=>reorderBlock(i,-1);
-      const gDown=document.createElement("button");gDown.type="button";gDown.className="move";gDown.textContent="⇩";gDown.title="Mover grupo para baixo";gDown.disabled=groupBounds(i)[1]===rows.length-1;gDown.onclick=()=>reorderBlock(i,1);
+      const gUp=document.createElement("button");gUp.className="move";gUp.textContent="⇧";gUp.title="Mover grupo para cima";gUp.disabled=groupBounds(i)[0]===0;gUp.onclick=()=>reorderBlock(i,-1);
+      const gDown=document.createElement("button");gDown.className="move";gDown.textContent="⇩";gDown.title="Mover grupo para baixo";gDown.disabled=groupBounds(i)[1]===rows.length-1;gDown.onclick=()=>reorderBlock(i,1);
       actions.append(groupLabel,gUp,gDown);
     }
     actions.append(del);tr.appendChild(actions);tableBody.appendChild(tr);
@@ -497,7 +473,7 @@ document.getElementById("resetSmedBtn").addEventListener("click",()=>{
   statusEl.textContent="Atividades do SMED apagadas. Configurações da lista suspensa preservadas e salvamento atualizado.";
 });
 document.getElementById("addBtn").addEventListener("click",()=>{
-  rows.push(headers.map(()=> ""));ids.push(uniqueId());selections.push(((options[0]&&options[0].label)||""));customColors.push(null);groups.push(null);render();status("Nova linha adicionada.");
+  rows.push(headers.map(()=> ""));ids.push(uniqueId());selections.push((options[0]?.label||""));customColors.push(null);groups.push(null);render();status("Nova linha adicionada.");
 });
 document.getElementById("exportBtn").addEventListener("click",async()=>{
   datasets[activeTab]=snapshotCurrent();
@@ -526,7 +502,7 @@ document.getElementById("exportBtn").addEventListener("click",async()=>{
         cols.forEach((h,i)=>sheet.getColumn(i+1).width=Math.max(17,Math.min(45,h.length+9)));
         values.forEach((values,i)=>{
           const row=sheet.addRow(values);
-          const color=d.customColors[i]||((options.find(o=>o.label===d.selections[i])||{}).color||"#ffffff");
+          const color=d.customColors[i]||options.find(o=>o.label===d.selections[i])?.color||"#ffffff";
           const argb="FF"+color.replace("#","").toUpperCase();
           row.eachCell({includeEmpty:true},cell=>cell.fill={type:"pattern",pattern:"solid",fgColor:{argb}});
         });
@@ -599,7 +575,7 @@ document.getElementById("fileInput").addEventListener("change",async e=>{
     const colorIndex=headers.indexOf("Cor da linha");
     const timerCols=["Início","Fim","Duração","Total do grupo"];
     const keep=headers.map((h,i)=>i).filter(i=>i!==classificationIndex&&i!==colorIndex&&i!==importedGroupIndex&&!timerCols.includes(headers[i]));
-    selections=rows.map(r=>classificationIndex>=0&&options.some(o=>o.label===r[classificationIndex])?r[classificationIndex]:((options[0]&&options[0].label)||""));
+    selections=rows.map(r=>classificationIndex>=0&&options.some(o=>o.label===r[classificationIndex])?r[classificationIndex]:(options[0]?.label||""));
     customColors=rows.map(r=>colorIndex>=0&&/^#[0-9a-fA-F]{6}$/.test(r[colorIndex])?r[colorIndex]:null);
     rows=rows.map(r=>keep.map(i=>r[i]));headers=keep.map(i=>headers[i]);
     ids=rows.map(()=>uniqueId());clocks.clear();
@@ -607,10 +583,6 @@ document.getElementById("fileInput").addEventListener("change",async e=>{
   }catch(err){status("Não foi possível importar o arquivo: "+err.message)}
   e.target.value="";
 });
-
-// iPhone/Safari: controles usam eventos click nativos.
-
-
 restoreSaved();renderConfig();render();
 window.addEventListener("pagehide",saveNow);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow()});
